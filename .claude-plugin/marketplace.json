@@ -1,0 +1,12 @@
+{
+  "name": "agent-analytics-marketplace",
+  "description": "Agent Analytics plugins for Claude",
+  "plugins": [
+    {
+      "name": "agent-analytics",
+      "version": "1.0.0",
+      "description": "Analytics your AI agent can actually use — track, analyze, experiment, and optimize across all your projects via MCP.",
+      "source": "."
+    }
+  ]
+}
