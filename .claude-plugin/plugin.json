@@ -8,5 +8,11 @@
   },
   "repository": "https://github.com/Agent-Analytics/agent-analytics-plugin",
   "homepage": "https://agentanalytics.sh",
-  "tags": ["analytics", "tracking", "web", "events", "experiments", "growth", "mcp"]
+  "tags": ["analytics", "tracking", "web", "events", "experiments", "growth", "mcp"],
+  "mcpServers": {
+    "agent-analytics": {
+      "type": "http",
+      "url": "https://mcp.agentanalytics.sh/mcp"
+    }
+  }
 }
