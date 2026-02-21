@@ -1,12 +1,23 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agent-analytics-marketplace",
   "description": "Agent Analytics plugins for Claude",
+  "owner": {
+    "name": "Agent Analytics",
+    "email": "contact@agentanalytics.sh"
+  },
   "plugins": [
     {
       "name": "agent-analytics",
       "version": "1.0.0",
       "description": "Analytics your AI agent can actually use — track, analyze, experiment, and optimize across all your projects via MCP.",
-      "source": "."
+      "author": {
+        "name": "Danny Shmueli",
+        "email": "danny@agentanalytics.sh"
+      },
+      "source": "./skills/agent-analytics",
+      "category": "analytics",
+      "homepage": "https://agentanalytics.sh"
     }
   ]
 }
