@@ -3,7 +3,7 @@
   "description": "Analytics your AI agent can actually use — track, analyze, experiment, and optimize across all your projects via MCP. Includes a growth playbook so your agent knows HOW to grow, not just what to track.",
   "version": "1.0.0",
   "author": {
-    "name": "Danny Shmueli",
+    "name": "Agent Analytics",
     "url": "https://agentanalytics.sh"
   },
   "repository": "https://github.com/Agent-Analytics/agent-analytics-plugin",

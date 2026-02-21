@@ -12,8 +12,8 @@
       "version": "1.0.0",
       "description": "Analytics your AI agent can actually use — track, analyze, experiment, and optimize across all your projects via MCP.",
       "author": {
-        "name": "Danny Shmueli",
-        "email": "danny@agentanalytics.sh"
+        "name": "Agent Analytics",
+        "email": "contact@agentanalytics.sh"
       },
       "source": "./skills/agent-analytics",
       "category": "analytics",
