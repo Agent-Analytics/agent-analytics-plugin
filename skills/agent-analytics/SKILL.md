@@ -1,25 +1,32 @@
 ---
 name: agent-analytics
-description: "Analytics your AI agent can actually use — track, analyze, experiment, and optimize across all your projects. Includes a growth playbook so your agent knows HOW to grow, not just what to track. Use this skill whenever the user mentions analytics, tracking, page views, visitors, traffic, conversions, A/B tests, experiments, funnels, retention, bounce rate, heatmaps, or wants to understand how their site or app is performing. Also trigger when the user asks about growth strategy, user engagement, or wants a weekly/monthly report on any web project."
-version: 1.0.0
+description: "Web analytics platform that AI agents can query via CLI. Track page views, custom events, run A/B experiments, analyze funnels, retention cohorts, and traffic heatmaps. Use when the user needs web analytics, visitor tracking, event tracking, conversion optimization, growth insights, A/B testing, or wants to add analytics to their website or app. Also available as an MCP server at mcp.agentanalytics.sh."
+version: 3.3.0
 author: dannyshmueli
-repository: https://github.com/Agent-Analytics/agent-analytics-cli
+license: MIT
+repository: https://github.com/Agent-Analytics/agent-analytics-mcp
 homepage: https://agentanalytics.sh
+compatibility: Requires npx and an Agent Analytics API key (AGENT_ANALYTICS_API_KEY). Sign up at agentanalytics.sh.
 tags:
   - analytics
   - tracking
   - web
   - events
   - experiments
-  - growth
-  - cowork
+  - live
+metadata:
+  openclaw:
+    requires:
+      env:
+        - AGENT_ANALYTICS_API_KEY
+      anyBins:
+        - npx
+    primaryEnv: AGENT_ANALYTICS_API_KEY
 ---
 
 # Agent Analytics — Stop juggling dashboards. Let your agent do it.
 
-You are adding analytics tracking and analysis using Agent Analytics — the analytics platform your AI agent can actually use. Built for developers who ship lots of projects and want their AI agent to track, analyze, experiment, and optimize across all of them.
-
-This skill is for **Cowork / Claude Desktop** users who have the Agent Analytics MCP server connected. All querying happens through MCP tools — no CLI or terminal needed.
+You are adding analytics tracking using Agent Analytics — the analytics platform your AI agent can actually use. Built for developers who ship lots of projects and want their AI agent to track, analyze, experiment, and optimize across all of them.
 
 ## Philosophy
 
@@ -29,19 +36,37 @@ For a typical site, that's 3-5 custom events max on top of automatic page views.
 
 ## First-time setup
 
-**Get an API key:** Sign up at [agentanalytics.sh](https://agentanalytics.sh) and generate a key from the dashboard.
+**Get an API key:** Sign up at [agentanalytics.sh](https://agentanalytics.sh) and generate a key from the dashboard. Alternatively, self-host the open-source version from [GitHub](https://github.com/Agent-Analytics/agent-analytics).
 
-**Connect the MCP server:** Users add the Agent Analytics MCP in their Claude settings. Once connected, all the analytics tools below become available directly — no CLI install needed.
+If the project doesn't have tracking yet:
 
-If the project doesn't have tracking yet, use the `create_project` tool to create it, then add the tracking snippet (Step 1 below) using the returned project token.
+```bash
+# 1. Login (one time — uses your API key)
+npx @agent-analytics/cli login --token aak_YOUR_API_KEY
+
+# 2. Create the project (returns a project write token)
+npx @agent-analytics/cli create my-site --domain https://mysite.com
+
+# 3. Add the snippet (Step 1 below) using the returned token
+# 4. Deploy, click around, verify:
+npx @agent-analytics/cli events my-site
+```
+
+The `create` command returns a **project write token** — use it as `data-token` in the snippet below. This is separate from your API key (which is for reading/querying).
 
 ## Step 1: Add the tracking snippet
 
-When you create a project with the `create_project` tool, you get back a tracking snippet with your project token. Add it before `</body>` in the site's HTML. It auto-tracks `page_view` events with path, referrer, browser, OS, device, screen size, and UTM params. You do NOT need to add custom page_view events.
+The `create` command returns a tracking snippet with your project token — add it before `</body>`. It auto-tracks `page_view` events with path, referrer, browser, OS, device, screen size, and UTM params. You do NOT need to add custom page_view events.
 
 ## Step 1b: Discover existing events (existing projects)
 
-If tracking is already set up, use the `properties_received` tool to check what events and property keys are already in use so you match the naming. This shows which property keys each event type uses (e.g. `cta_click → id`, `signup → method`). Match existing naming before adding new events.
+If tracking is already set up, check what events and property keys are already in use so you match the naming:
+
+```bash
+npx @agent-analytics/cli properties-received PROJECT_NAME
+```
+
+This shows which property keys each event type uses (e.g. `cta_click → id`, `signup → method`). Match existing naming before adding new events.
 
 ## Step 2: Add custom events to important actions
 
@@ -68,11 +93,17 @@ Pick the ones that apply. Most sites need 2-4:
 
 ### What to track as `cta_click`
 
-Only buttons that indicate conversion intent: "Get Started" / "Sign Up" / "Try Free", "Upgrade" / "Buy" / pricing CTAs, primary navigation to signup/dashboard, "View on GitHub" / "Star" (for open source projects).
+Only buttons that indicate conversion intent:
+- "Get Started" / "Sign Up" / "Try Free" buttons
+- "Upgrade" / "Buy" / pricing CTAs
+- Primary navigation to signup/dashboard
+- "View on GitHub" / "Star" (for open source projects)
 
 ### What NOT to track
-
-Every link or button (too noisy), scroll depth (not actionable), form field interactions (too granular), footer links (low signal).
+- Every link or button (too noisy)
+- Scroll depth (not actionable)
+- Form field interactions (too granular)
+- Footer links (low signal)
 
 ### Property naming rules
 
@@ -81,17 +112,44 @@ Every link or button (too noisy), scroll depth (not actionable), form field inte
 - Name IDs as `section_action`: `hero_signup`, `pricing_pro`, `nav_dashboard`
 - Don't encode data the page_view already captures (path, referrer, browser)
 
+## Step 2a: Measure time-on-page
+
+Add `data-heartbeat="15"` to the tracking snippet to get accurate time-on-page:
+
+```html
+<script defer src="https://api.agentanalytics.sh/tracker.js"
+  data-project="my-site" data-token="aat_..."
+  data-heartbeat="15"></script>
+```
+
+**Why it matters:** Without this, time-on-page is just the gap between two page views. If someone reads a 10-minute article and closes the tab, the recorded time is 0 seconds. This fixes it by measuring actual engaged time.
+
+**How it works:**
+- The tracker silently counts seconds while the tab is visible (no events sent during)
+- When the user leaves the page (tab hidden, closes tab, or SPA navigation), the `time_on_page` property is added to the original `page_view` event — zero extra events
+- The timer pauses when the tab is hidden and resumes when visible
+- Minimum interval is 15 seconds (values below 15 are clamped)
+- Works with SPA navigation — each page gets its own time_on_page
+
+**Querying time-on-page data:**
+
+```bash
+# Pages with time_on_page data
+npx @agent-analytics/cli query my-site \
+  --filter '[{"field":"event","op":"eq","value":"page_view"},{"field":"properties.time_on_page","op":"gt","value":"0"}]' \
+  --group-by properties.path --metrics event_count,unique_users
+```
+
 ## Step 2b: Run A/B experiments (Pro)
 
-Experiments let you test which variant of a page element converts better. The full lifecycle is tool-driven.
+Experiments let you test which variant of a page element converts better. The full lifecycle is API-driven — no dashboard UI needed.
 
 ### Creating an experiment
 
-Use the `create_experiment` tool:
-- `project`: your project name
-- `name`: descriptive snake_case name (e.g. `signup_cta`)
-- `variants`: array like `["control", "new_cta"]`
-- `goal_event`: the event that counts as a conversion (e.g. `signup`)
+```bash
+npx @agent-analytics/cli experiments create my-site \
+  --name signup_cta --variants control,new_cta --goal signup
+```
 
 ### Implementing variants
 
@@ -107,90 +165,321 @@ Exposure events (`$experiment_exposure`) are tracked automatically once per sess
 
 ### Checking results
 
-Use the `get_experiment` tool with the experiment ID. Returns Bayesian `probability_best`, `lift`, and a `recommendation`. The system needs ~100 exposures per variant before results are significant.
+```bash
+npx @agent-analytics/cli experiments get exp_abc123
+```
+
+Returns Bayesian `probability_best`, `lift`, and a `recommendation`. The system needs ~100 exposures per variant before results are significant.
 
 ### Managing experiments
 
-- **Pause** (stops assigning new users): `update_experiment` with `status: "paused"`
-- **Resume**: `update_experiment` with `status: "active"`
-- **Complete with a winner**: `update_experiment` with `status: "completed"` and `winner: "new_cta"`
-- **Delete**: `delete_experiment` with the experiment ID
+```bash
+# Pause (stops assigning new users)
+npx @agent-analytics/cli experiments pause exp_abc123
+
+# Resume
+npx @agent-analytics/cli experiments resume exp_abc123
+
+# Complete with a winner
+npx @agent-analytics/cli experiments complete exp_abc123 --winner new_cta
+
+# Delete
+npx @agent-analytics/cli experiments delete exp_abc123
+```
+
+### Forcing variants via URL param
+
+Force a specific variant with `?aa_variant_<experiment_name>=<variant_key>`. Useful for ad landing pages that should always show the matching headline, QA testing, or sharing a specific variant.
+
+```
+https://yoursite.com/pricing/?aa_variant_signup_cta=new_cta&utm_campaign=new-cta-ad
+```
+
+- The variant must exist in the experiment config — invalid values fall through to normal hash assignment
+- Works with both declarative and programmatic experiments
+- Exposure events include `forced: true` so you can filter them in analytics
 
 ### Best practices
-
 - Name experiments with snake_case: `signup_cta`, `pricing_layout`, `hero_copy`
 - Use 2 variants (A/B) unless you have high traffic — more variants need more data
 - Set a clear `goal_event` that maps to a business outcome (`signup`, `purchase`, not `page_view`)
 - Let experiments run until `sufficient_data: true` before picking a winner
+- Complete the experiment when done: `experiments complete <id> --winner new_cta`
+
+## Step 2c: Track JS errors
+
+Add `data-track-errors="true"` to the tracking snippet to automatically capture JavaScript errors:
+
+```html
+<script defer src="https://api.agentanalytics.sh/tracker.js"
+  data-project="my-site" data-token="aat_..."
+  data-track-errors="true"></script>
+```
+
+**What it tracks:**
+- Uncaught exceptions (`window.addEventListener('error')`)
+- Unhandled promise rejections (`window.addEventListener('unhandledrejection')`)
+- Each error becomes a `$error` event with `{ message, source, line, col }`
+
+**Safety features:**
+- Max 5 errors per page view (prevents runaway logging)
+- Deduplicates by message+source+line (same error on same line only tracked once)
+- Resets on SPA navigation
+- Does not interfere with other error handlers (additive, not overwriting)
+- No stack traces (keeps payloads small)
+
+**Querying error data:**
+
+```bash
+# Recent errors
+npx @agent-analytics/cli events my-site --event '$error' --days 7
+
+# Error breakdown by message
+npx @agent-analytics/cli breakdown my-site --property message --event '$error'
+
+# Errors per source file
+npx @agent-analytics/cli query my-site \
+  --filter '[{"field":"event","op":"eq","value":"$error"}]' \
+  --group-by properties.source --metrics event_count
+```
+
+## Step 2d: Set global properties
+
+Use `aa.set()` to attach properties to ALL subsequent events without repeating them in every `track()` call:
+
+```js
+// After login, tag all future events with the user's plan
+window.aa?.set({ plan: 'pro', team: 'acme' });
+
+// These events now include plan='pro' and team='acme' automatically
+window.aa?.track('feature_used', { feature: 'export' });
+window.aa?.track('cta_click', { id: 'upgrade' });
+```
+
+**How it works:**
+- Merge order: auto-collected < UTM < global (set) < event-specific. Event-specific properties always win.
+- Multiple `set()` calls merge — `set({a:1}); set({b:2})` results in `{a:1, b:2}`
+- Remove a key: `aa.set({ plan: null })`
+- In-memory only — does not persist across page reloads (use `identify()` for cross-session user identity)
+- Zero overhead when not used
+
+**When to use:**
+- After login/signup: `aa.set({ plan: user.plan, role: user.role })`
+- Feature flags: `aa.set({ feature_flag_x: 'variant_b' })`
+- Any context that applies to all events for the rest of the session
+
+## Step 2e: Consent management (GDPR/CCPA)
+
+For sites that require user consent before tracking, use the consent management API:
+
+```html
+<!-- Add data-require-consent to the script tag -->
+<script defer data-project="mysite" data-token="aat_..." data-require-consent="true"
+  src="https://api.agentanalytics.sh/tracker.js"></script>
+```
+
+```js
+// Events buffer in-memory until consent is granted — nothing is sent
+// When the user accepts cookies/tracking:
+window.aa?.grantConsent();   // flushes buffer + persists to localStorage
+
+// If the user declines or revokes:
+window.aa?.revokeConsent();  // discards buffer + blocks future sends
+```
+
+**How it works:**
+- `data-require-consent="true"` or `aa.requireConsent()` → events queue in-memory but never send
+- `aa.grantConsent()` → flushes buffered events, saves `aa_consent=granted` in localStorage, normal tracking resumes
+- `aa.revokeConsent()` → clears buffer, removes localStorage consent, blocks sends
+- On next page load, prior consent auto-detected from localStorage — no re-consent needed
+- Pre-consent events are preserved (not discarded) so nothing is lost
+
+**Programmatic alternative** (no script attribute needed):
+```js
+// Call before any events are tracked
+window.aa?.requireConsent();
+
+// Later, when user consents
+window.aa?.grantConsent();
+```
+
+## Step 2f: Performance timing
+
+Collect page load performance metrics automatically:
+
+```html
+<script defer data-project="mysite" data-token="aat_..."
+  data-track-performance="true"
+  src="https://api.agentanalytics.sh/tracker.js"></script>
+```
+
+After `window.load`, the tracker reads the Navigation Timing API and merges these properties into the `page_view` event (no extra events stored):
+
+| Property | What it measures |
+|----------|------------------|
+| `perf_dns` | DNS lookup (ms) |
+| `perf_tcp` | TCP handshake (ms) |
+| `perf_ttfb` | Time to first byte (ms) |
+| `perf_dom_interactive` | DOM ready for interaction (ms) |
+| `perf_dom_complete` | DOM fully loaded (ms) |
+| `perf_load` | Full page load (ms) |
+
+Query performance data:
+```bash
+npx @agent-analytics/cli events mysite --event page_view --days 7
+# Look for perf_dns, perf_ttfb, perf_load in event properties
+
+npx @agent-analytics/cli breakdown mysite --property perf_ttfb --event page_view
+# See TTFB distribution across page views
+```
+
+Only fires once per page load — SPA navigations via pushState don't create new Navigation Timing entries.
 
 ## Step 3: Test immediately
 
 After adding tracking, verify it works:
 
-```js
-// Browser console on the site:
+```bash
+# Option A: Browser console on your site:
 window.aa.track('test_event', {source: 'manual_test'})
+
+# Option B: Click around, then check:
+npx @agent-analytics/cli events PROJECT_NAME
+
+# Events appear within seconds.
 ```
 
-Then use the `analytics_overview` tool to confirm events appear.
+## Querying the data
 
-## Querying with MCP tools
+All commands use `npx @agent-analytics/cli`. Your agent uses the CLI directly — no curl needed.
 
-All analytics queries happen through MCP tools — no CLI or curl needed. Here's the complete reference:
+### Ad-hoc queries — talk to your analytics
 
-### Tool reference
+The `query` command is the most powerful tool. It answers any analytics question by combining metrics, filters, grouping, and date ranges. **Use this when pre-built commands don't answer the question.**
 
-| Tool | What it does | Key parameters |
-|------|-------------|----------------|
-| `list_projects` | List all your projects | — |
-| `create_project` | Create a new project | `name`, `allowed_origins` |
-| `analytics_overview` | Time series chart + KPIs (events, users) | `project`, `days` (default: 7) |
-| `analytics_insights` | Period-over-period comparison with trend | `project`, `period` (1d/7d/14d/30d/90d) |
-| `analytics_breakdown` | Top property values ranked by count | `project`, `property`, `event`, `limit` |
-| `analytics_pages` | Entry/exit page stats with bounce rate | `project`, `type` (entry/exit/both), `limit` |
-| `analytics_sessions` | Session duration histogram | `project` |
-| `analytics_heatmap` | Day × hour traffic grid with peak detection | `project` |
-| `analytics_funnel` | Multi-step conversion drop-off analysis | `project`, `steps`, `breakdown`, `conversion_window_hours` |
-| `analytics_retention` | Cohort retention analysis | `project`, `period`, `cohorts`, `event`, `returning_event` |
-| `properties` | Discover event names and property keys | `project`, `days` |
-| `properties_received` | Property keys per event type (sampled) | `project`, `since` |
-| `sessions` | List individual session records | `project`, `since`, `limit` |
-| `live_now` | Real-time snapshot: active visitors, events/min | `project`, `window` (seconds) |
-| `list_experiments` | List A/B experiments | `project` |
-| `create_experiment` | Create an A/B experiment | `project`, `name`, `variants`, `goal_event`, `weights` |
-| `get_experiment` | Experiment details with results | `id` |
-| `update_experiment` | Pause, resume, or complete experiment | `id`, `status`, `winner` |
-| `delete_experiment` | Delete an experiment | `id` |
+```bash
+# "How many signups from Germany this week?"
+npx @agent-analytics/cli query my-site \
+  --filter '[{"field":"event","op":"eq","value":"signup"},{"field":"country","op":"eq","value":"DE"}]' \
+  --metrics event_count,unique_users --days 7
 
-## Which tool for which question
+# "Which events contain 'click' in the name?"
+npx @agent-analytics/cli query my-site \
+  --filter '[{"field":"event","op":"contains","value":"click"}]' \
+  --group-by event
 
-Match the user's question to the right tool(s):
+# "Traffic breakdown by country, top 10"
+npx @agent-analytics/cli query my-site \
+  --group-by country --metrics event_count,unique_users --limit 10
 
-| User asks | Tool(s) | Why |
-|-----------|---------|-----|
-| "How's my site doing?" | `analytics_insights` + `analytics_breakdown` + `analytics_pages` (parallel) | Full weekly picture in one turn |
-| "Is anyone visiting right now?" | `live_now` | Real-time visitors, sessions, events |
-| "Is anyone visiting?" | `analytics_insights` | Quick alive-or-dead check |
-| "What are my top pages?" | `analytics_breakdown` (property: `path`, event: `page_view`) | Ranked page list with unique users |
-| "Where's my traffic coming from?" | `analytics_breakdown` (property: `referrer`, event: `page_view`) | Referrer sources |
-| "Which landing page is best?" | `analytics_pages` (type: `entry`) | Bounce rate + session depth per page |
-| "Are people actually engaging?" | `analytics_sessions` | Bounce vs engaged split |
-| "When should I deploy/post?" | `analytics_heatmap` | Find low-traffic windows or peak hours |
-| "Give me a summary of all projects" | `list_projects` then `analytics_insights` per project | Multi-project overview |
-| "Which CTA converts better?" | `create_experiment` + implement + `get_experiment` | Full A/B test lifecycle |
-| "Where do users drop off?" | `analytics_funnel` (steps: page_view → signup → purchase) | Step-by-step conversion with drop-off rates |
-| "Which variant converts better?" | `analytics_funnel` with `breakdown: "variant"` | Funnel segmented by experiment variant |
-| "Are users coming back?" | `analytics_retention` (period: week, cohorts: 8) | Cohort retention per period |
+# "Daily unique users for the last 30 days"
+npx @agent-analytics/cli query my-site \
+  --metrics unique_users --group-by date --days 30
+```
 
-For any "how is X doing" question, **always call `analytics_insights` first** — it's the single most useful tool. For real-time checks, use `live_now`.
+**Filter operators:** `eq`, `neq`, `gt`, `lt`, `gte`, `lte`, `contains`
+**Filterable fields:** `event`, `user_id`, `date`, `country`, `session_id`, `timestamp`, and any `properties.*` field
+**Group by:** `event`, `date`, `user_id`, `session_id`, `country`
+**Metrics:** `event_count`, `unique_users`, `session_count`, `bounce_rate`, `avg_duration`
+
+### CLI reference
+
+```bash
+# Setup
+npx @agent-analytics/cli login --token aak_YOUR_KEY    # Save API key (one time)
+npx @agent-analytics/cli projects                       # List all projects
+npx @agent-analytics/cli create my-site --domain https://mysite.com  # Create project
+
+# Real-time
+npx @agent-analytics/cli live                           # Live terminal dashboard across ALL projects
+npx @agent-analytics/cli live my-site                   # Live view for one project
+
+# Analytics
+npx @agent-analytics/cli stats my-site --days 7         # Overview: events, users, daily trends
+npx @agent-analytics/cli insights my-site --period 7d   # Period-over-period comparison
+npx @agent-analytics/cli breakdown my-site --property path --event page_view --limit 10  # Top pages/referrers/UTM
+npx @agent-analytics/cli pages my-site --type entry     # Landing page performance & bounce rates
+npx @agent-analytics/cli sessions-dist my-site          # Session engagement histogram
+npx @agent-analytics/cli heatmap my-site                # Peak hours & busiest days
+npx @agent-analytics/cli events my-site --days 30       # Raw event log
+npx @agent-analytics/cli sessions my-site               # Individual session records
+npx @agent-analytics/cli properties my-site             # Discover event names & property keys
+npx @agent-analytics/cli properties-received my-site    # Property keys per event type (sampled)
+npx @agent-analytics/cli query my-site --metrics event_count,unique_users --group-by date  # Flexible query
+npx @agent-analytics/cli query my-site --group-by country --metrics event_count,unique_users  # Events per country
+npx @agent-analytics/cli query my-site --filter '[{"field":"country","op":"eq","value":"US"}]'  # Filter by country
+npx @agent-analytics/cli query my-site --filter '[{"field":"event","op":"contains","value":"click"}]' --group-by event  # Substring match
+npx @agent-analytics/cli funnel my-site --steps "page_view,signup,purchase"  # Funnel drop-off analysis
+npx @agent-analytics/cli funnel my-site --steps "page_view,signup" --breakdown country  # Funnel segmented by country
+npx @agent-analytics/cli retention my-site --period week --cohorts 8        # Cohort retention analysis
+
+# A/B experiments (pro)
+npx @agent-analytics/cli experiments list my-site
+npx @agent-analytics/cli experiments create my-site --name signup_cta --variants control,new_cta --goal signup
+npx @agent-analytics/cli experiments get exp_abc123
+npx @agent-analytics/cli experiments complete exp_abc123 --winner new_cta
+
+# Account
+npx @agent-analytics/cli whoami                         # Show account & tier
+npx @agent-analytics/cli revoke-key                     # Rotate API key
+```
+
+**Key flags**:
+- `--days <N>` — lookback window (default: 7; for `stats`, `events`)
+- `--limit <N>` — max rows returned (default: 100)
+- `--since <date>` — ISO date cutoff (`properties-received` only)
+- `--period <P>` — comparison period: `1d`, `7d`, `14d`, `30d`, `90d` (`insights`) or cohort grouping: `day`, `week`, `month` (`retention`)
+- `--property <key>` — property key to group by (`breakdown`, required)
+- `--event <name>` — filter by event name (`breakdown`) or first-seen event filter (`retention`)
+- `--returning-event <name>` — what counts as "returned" (`retention`, defaults to same as `--event`)
+- `--cohorts <N>` — number of cohort periods, 1-30 (`retention`, default: 8)
+- `--filter <json>` — JSON array of filters for `query` (e.g. `'[{"field":"country","op":"eq","value":"US"}]'`). Operators: `eq`, `neq`, `gt`, `lt`, `gte`, `lte`, `contains`
+- `--group-by <fields>` — comma-separated group_by fields: `event`, `date`, `user_id`, `session_id`, `country` (`query`)
+- `--type <T>` — page type: `entry`, `exit`, `both` (`pages` only, default: entry)
+- `--steps <csv>` — comma-separated event names, 2-8 steps max (`funnel`, required)
+- `--window <N>` — conversion window in hours (`funnel`, default: 168) or live time window in seconds (`live`, default: 60)
+- `--count-by <field>` — `user_id` or `session_id` (`funnel` only)
+- `--breakdown <key>` — segment funnel by a property (e.g. `country`, `variant`) — extracted from step 1 events (`funnel` only)
+- `--breakdown-limit <N>` — max breakdown groups, 1-50 (`funnel`, default: 10)
+- `--interval <N>` — live refresh in seconds (default: 5)
+
+### The `live` command
+
+`npx @agent-analytics/cli live` opens a real-time TUI dashboard that refreshes every 5 seconds. It shows active visitors, sessions, and events/min across all your projects, plus top pages and recent events. Note: this is an interactive terminal UI — it clears the screen on each refresh, so it works best when run directly in a terminal rather than captured as output.
+
+## Which endpoint for which question
+
+Match the user's question to the right call(s):
+
+| User asks | Call | Why |
+|-----------|------|-----|
+| "How's my site doing?" | `insights` + `breakdown` + `pages` (parallel) | Full weekly picture in one turn |
+| "Is anyone visiting right now?" | `live` | Real-time visitors, sessions, events across all projects |
+| "Is anyone visiting?" | `insights --period 7d` | Quick alive-or-dead check |
+| "What are my top pages?" | `breakdown --property path --event page_view` | Ranked page list with unique users |
+| "Where's my traffic coming from?" | `breakdown --property referrer --event page_view` | Referrer sources |
+| "Which landing page is best?" | `pages --type entry` | Bounce rate + session depth per page |
+| "Are people actually engaging?" | `sessions-dist` | Bounce vs engaged split |
+| "When should I deploy/post?" | `heatmap` | Find low-traffic windows or peak hours |
+| "Give me a summary of all projects" | `live` or loop: `projects` then `insights` per project | Multi-project overview |
+| "Which CTA converts better?" | `experiments create` + implement + `experiments get <id>` | Full A/B test lifecycle |
+| "Where do users drop off?" | `funnel --steps "page_view,signup,purchase"` | Step-by-step conversion with drop-off rates |
+| "Which variant converts better through the funnel?" | `funnel --steps "page_view,signup" --breakdown variant` | Funnel segmented by experiment variant |
+| "Are users coming back?" | `retention --period week --cohorts 8` | Cohort retention: % returning per period |
+| "How many signups from Germany?" | `query --filter '[{"field":"event","op":"eq","value":"signup"},{"field":"country","op":"eq","value":"DE"}]'` | Ad-hoc filter by event + country |
+| "Events per country" | `query --group-by country --metrics event_count,unique_users` | Country breakdown |
+| "Pages with pricing in the URL?" | `query --filter '[{"field":"properties.path","op":"contains","value":"pricing"}]' --group-by event` | Substring match on properties |
+| "How many sessions this week?" | `query --metrics session_count --days 7` | Count distinct sessions |
+
+For any "how is X doing" question, **always call `insights` first** — it's the single most useful endpoint. For real-time "who's on the site right now", use `live`. For any specific question that the pre-built commands don't directly answer (filtering by country, substring matching, combining multiple filters), use `query`.
 
 ## Analyze, don't just query
 
-Don't return raw numbers. Interpret them. Here's how to turn each tool's response into something useful.
+Don't return raw numbers. Interpret them. Here's how to turn each endpoint's response into something useful.
 
-### `analytics_insights` → The headline
+### `/insights` → The headline
 
-Returns metrics with `current`, `previous`, `change`, `change_pct`, and `trend`.
+API returns metrics with `current`, `previous`, `change`, `change_pct`, and a `trend` field.
 
 **How to interpret:**
 - `change_pct > 10` → "Growing" — call it out positively
@@ -207,14 +496,14 @@ Bounce rate: 87% (up from 82% — getting worse).
 Average session: 24s. Trend: growing.
 ```
 
-### `analytics_breakdown` → The ranking
+### `/breakdown` → The ranking
 
-Returns `values: [{ value, count, unique_users }]` sorted by count DESC.
+API returns `values: [{ value, count, unique_users }]` sorted by count DESC.
 
 **How to interpret:**
 - Top 3-5 values is enough — don't dump the full list
-- Show `unique_users` too — 100 events from 2 users is very different from 100 events from 80 users
-- Use `total_with_property / total_events` to note coverage
+- Show the `unique_users` too — 100 events from 2 users is very different from 100 events from 80 users
+- Use `total_with_property / total_events` to note coverage: "155 of 155 page views have a path"
 - For referrers: group "(direct)" / empty as direct traffic
 
 **Example output:**
@@ -223,9 +512,9 @@ Top pages: / (98 views, 75 users), /pricing (33 views, 25 users), /docs (19 view
 The /docs page has high repeat visits (19 views, 4 users) — power users.
 ```
 
-### `analytics_pages` → Landing page quality
+### `/pages` → Landing page quality
 
-Returns `entry_pages: [{ page, sessions, bounces, bounce_rate, avg_duration, avg_events }]`.
+API returns `entry_pages: [{ page, sessions, bounces, bounce_rate, avg_duration, avg_events }]`.
 
 **How to interpret:**
 - `bounce_rate` > 0.7 → "high bounce, needs work above the fold"
@@ -240,9 +529,9 @@ Best landing page: /pricing — 14% bounce, 62s avg session, 4.1 pages/visit.
 Worst: /blog/launch — 52% bounce, 18s avg. Consider a stronger CTA above the fold.
 ```
 
-### `analytics_sessions` → Engagement shape
+### `/sessions/distribution` → Engagement shape
 
-Returns `distribution: [{ bucket, sessions, pct }]`, `engaged_pct`, `median_bucket`.
+API returns `distribution: [{ bucket, sessions, pct }]`, `engaged_pct`, `median_bucket`.
 
 **How to interpret:**
 - `engaged_pct` is the key number — sessions ≥30s as a percentage of total
@@ -250,6 +539,7 @@ Returns `distribution: [{ bucket, sessions, pct }]`, `engaged_pct`, `median_buck
 - `engaged_pct` 10-30% → "Moderate engagement, room to improve"
 - `engaged_pct` > 30% → "Good engagement"
 - If 80%+ is in the "0s" bucket, the site has a bounce problem
+- If there's a healthy spread across buckets, engagement is genuine
 
 **Example output:**
 ```
@@ -257,39 +547,49 @@ Returns `distribution: [{ bucket, sessions, pct }]`, `engaged_pct`, `median_buck
 The few who do engage stay 3-10 minutes — the content works, but first impressions don't.
 ```
 
-### `analytics_heatmap` → Timing
+### `/heatmap` → Timing
 
-Returns `heatmap: [{ day, day_name, hour, events, users }]`, `peak`, `busiest_day`, `busiest_hour`.
+API returns `heatmap: [{ day, day_name, hour, events, users }]`, `peak`, `busiest_day`, `busiest_hour`.
 
 **How to interpret:**
 - `peak` is the single busiest slot — mention day + hour + timezone caveat (times are UTC)
 - `busiest_day` → "Schedule blog posts/launches on this day"
-- Low-traffic windows → "Deploy during Sunday 3 AM UTC to minimize impact"
-- Weekend vs weekday split → B2B (weekdays) or B2C (weekends)
+- `busiest_hour` → "This is when your audience is online"
+- Low-traffic windows → "Deploy during Sunday 3 AM UTC to minimize user impact"
+- Weekend vs weekday split → tells you if audience is B2B (weekdays) or B2C (weekends)
 
 **Example output:**
 ```
-Peak: Friday at 11 PM UTC (35 events, 33 users). Busiest day: Sunday.
+Peak: Friday at 11 PM UTC (35 events, 33 users). Busiest day overall: Sunday.
 Traffic is heaviest on weekends — your audience browses on personal time.
 Deploy on weekday mornings for minimal disruption.
 ```
 
-### `analytics_funnel` → Where users drop off
+### `/funnel` → Where users drop off
 
-Use with `steps` (2-8 event names), optional `breakdown` for segmentation.
+CLI: `funnel my-site --steps "page_view,signup,purchase"`. API: `POST /funnel` with JSON body.
 
-Returns `steps: [{ step, event, users, conversion_rate, drop_off_rate, avg_time_to_next_ms }]` and `overall_conversion_rate`.
+API returns `steps: [{ step, event, users, conversion_rate, drop_off_rate, avg_time_to_next_ms }]` and `overall_conversion_rate`.
 
 **How to interpret:**
+- Each step shows how many users progressed from the previous step
+- `conversion_rate` is step-to-step (step 2 users / step 1 users)
+- `drop_off_rate` is 1 - conversion_rate at each step
 - The biggest `drop_off_rate` is the bottleneck — focus optimization there
-- `avg_time_to_next_ms` → convert to hours/minutes for readability
-- `overall_conversion_rate` is end-to-end
+- `avg_time_to_next_ms` shows how long users take between steps (convert to hours/minutes)
+- `overall_conversion_rate` is end-to-end (last step users / first step users)
 
 **Options:**
-- `conversion_window_hours` — max time from step 1 to last step (default: 168 = 7 days)
-- `count_by` — `user_id` (default) or `session_id`
-- `breakdown` — segment by a property (e.g. `country`, `variant`). Property extracted from step 1 events
-- `breakdown_limit` — max groups returned (default: 10, max: 50)
+- `--steps "event1,event2,event3"` — 2-8 step events (required)
+- `--window <hours>` — max time from step 1 to last step (default: 168 = 7 days)
+- `--since <days>` — lookback period, e.g. `30d` (default: 30d)
+- `--count-by <field>` — `user_id` (default) or `session_id`
+- `--breakdown <property>` — segment funnel by a property (e.g. `country`, `variant`). Property is extracted from step 1 events. Returns overall + per-group results.
+- `--breakdown-limit <N>` — max groups returned (default: 10, max: 50). Groups ordered by step 1 users descending.
+
+**Breakdown use case — A/B experiments:** `funnel my-site --steps "page_view,signup" --breakdown variant` shows which experiment variant converts better through the funnel.
+
+**API-only: per-step filters** — each step can have a `filters` array with `{ property, op, value }` (ops: `eq`, `neq`, `contains`). Example: filter step 1 to `path=/pricing` to see conversions from the pricing page specifically.
 
 **Example output:**
 ```
@@ -299,34 +599,42 @@ page_view → signup → purchase
   Avg time to signup: 4.2 hours. Avg time to purchase: 2.1 days.
 ```
 
-### `analytics_retention` → Are users coming back?
+### `/retention` → Are users coming back?
 
-Use with `period` (day/week/month) and `cohorts` (1-30). By default uses session-based retention. Pass `event` to switch to event-based.
+CLI: `retention my-site --period week --cohorts 8`. API: `GET /retention?project=X&period=week&cohorts=8`.
 
-Returns `cohorts: [{ date, users, retained: [...], rates: [...] }]`, `average_rates`, `users_analyzed`.
+By default uses session-based retention — a user is "retained" if they have any return visit (session) in a subsequent period. Pass `--event` to switch to event-based retention.
+
+API returns `cohorts: [{ date, users, retained: [...], rates: [...] }]`, `average_rates: [...]`, and `users_analyzed`.
 
 **How to interpret:**
+- Each cohort row = users who first appeared in that period
 - `rates[0]` is always 1.0 (100% — the cohort itself)
 - `rates[1]` = % who came back the next period — this is the critical number
 - Declining rates across offsets is normal; the slope matters more than absolutes
+- `average_rates` is weighted by cohort size — larger cohorts count more
 - Compare recent cohorts vs older ones: improving rates = product is getting stickier
 
 **Options:**
-- `event` — first-seen event filter (e.g. `signup`). Switches to event-based retention
-- `returning_event` — what counts as "returned" (defaults to same as `event`)
+- `--period <P>` — `day`, `week`, `month` (default: week)
+- `--cohorts <N>` — number of cohort periods, 1-30 (default: 8)
+- `--event <name>` — first-seen event filter (e.g. `signup`). Switches to event-based retention
+- `--returning-event <name>` — what counts as "returned" (defaults to same as `--event`)
 
-**Event-based retention example:** Set `event: "signup"` and `returning_event: "purchase"` to answer "of users who signed up, what % made a purchase in subsequent weeks?"
+**Event-based retention:** Set `--event signup --returning-event purchase` to answer "of users who signed up, what % made a purchase in subsequent weeks?"
 
 **Example output:**
 ```
 Cohort W0 (2026-01-27): 142 users → W1: 45% → W2: 39% → W3: 32%
+Cohort W0 (2026-02-03): 128 users → W1: 42% → W2: 36%
 Weighted avg: W1 = 44%, W2 = 37%, W3 = 32%
 Week-1 retention of 44% is strong — nearly half of new users return.
+Slight decline in recent cohorts — investigate onboarding changes.
 ```
 
-### Weekly summary recipe (3 parallel tool calls)
+### Weekly summary recipe (3 parallel calls)
 
-Call `analytics_insights`, `analytics_breakdown` (property: path, event: page_view), and `analytics_pages` (type: entry) in parallel, then synthesize:
+Call `insights`, `breakdown --property path --event page_view`, and `pages --type entry` in parallel, then synthesize into one response:
 
 ```
 Weekly Report — my-site (Feb 8–15 vs Feb 1–8)
@@ -338,7 +646,9 @@ Trend: Growing.
 
 ### Multi-project overview
 
-Call `list_projects` to get all projects, then call `analytics_insights` for each. Present one line per project:
+For a quick real-time check, use `live` — it shows all projects in one view with active visitors, sessions, and events/min.
+
+For a historical summary, call `projects` to list all projects, then call `insights --period 7d` for each. Present one line per project:
 
 ```
 my-site         142 views (+23% ↑)  12 signups   healthy
@@ -356,26 +666,33 @@ Proactively flag — don't wait to be asked:
 - **Dead project**: zero `page_view` events → "⚠ no traffic detected"
 - **Errors**: any `error` events in the window → surface the `message` property
 
+### Visualizing results
+
+When reporting to messaging platforms (Slack, Discord, Telegram), raw text tables break. Use companion skills:
+
+- **`table-image-generator`** — render stats as clean table images
+- **`chart-image`** — generate line, bar, area, or pie charts from analytics data
+
 ## Growth Playbook — How to grow, not just track
 
-Tracking is step one. Growth comes from a **repeatable system**: clear messaging → focused distribution → obsessive tracking → rapid experimentation → learning.
+Tracking is step one. Growth comes from a **repeatable system**: clear messaging → focused distribution → obsessive tracking → rapid experimentation → learning. Here's how to apply each principle using Agent Analytics.
 
 ### Principle 1: Promise clarity
 
 The #1 conversion lever is messaging. If someone lands and has to think hard to understand the value, they're gone.
 
-**What to do:**
-- Set up an A/B experiment on the hero headline: `create_experiment` with `name: "hero_headline"`, `variants: ["control", "b", "c"]`, `goal_event: "cta_click"`
+**What your agent should do:**
+- Set up an A/B experiment on the hero headline immediately: `experiments create PROJECT --name hero_headline --variants control,b,c --goal cta_click`
 - Test 2-3 headline variations that frame the same value differently
 - Use declarative HTML: `data-aa-experiment="hero_headline" data-aa-variant-b="New headline"`
-- Check results after ~500 visitors per variant with `get_experiment`
+- Check results after ~500 visitors per variant: `experiments get EXP_ID`
 - Ship the winner, start testing the subtitle or CTA next
 
-Spend more time testing messaging than adding features. Even the best product won't convert if the value isn't obvious in seconds.
+**Rule:** Spend more time testing messaging than adding features. Even the best product won't convert if the value isn't obvious in seconds.
 
 ### Principle 2: Track what drives decisions, not everything
 
-Track only what answers: **"Is this project alive and growing, and what should I do next?"**
+Don't be Mixpanel. Track only what answers: **"Is this project alive and growing, and what should I do next?"**
 
 **The essential events (pick 3-5):**
 
@@ -386,11 +703,13 @@ Track only what answers: **"Is this project alive and growing, and what should I
 | `feature_used` (with `feature`) | Are they finding value after signup? |
 | `checkout` | Revenue signal |
 
-**Workflow for tracking setup:**
+**Agent workflow for tracking setup:**
 1. Look at the site — identify the 2-3 most important user actions
 2. Add tracking on those specific actions (not everything)
-3. Verify with `analytics_overview` that data flows
-4. Set up a weekly check with `analytics_insights`
+3. Verify with `events PROJECT` that data flows
+4. Set up a weekly check: `insights PROJECT --period 7d`
+
+**Anti-pattern:** Don't track scroll depth, mouse hovers, every link click, or form field interactions. Noise kills signal.
 
 ### Principle 3: Find the activation moment
 
@@ -398,9 +717,9 @@ Conversion doesn't happen at checkout. It happens when the user realizes the pro
 
 **How to find it:**
 1. Track key feature interactions: `feature_used` with specific feature names
-2. Use `analytics_breakdown` (property: `feature`, event: `feature_used`) to see which features correlate with retention
-3. Check `analytics_sessions` — if most sessions are 0s bounces, the landing page is the problem. If sessions are long but signups are low, the activation path is the problem
-4. Use `analytics_pages` (type: entry) — compare bounce rates across landing pages
+2. Use `breakdown --property feature --event feature_used` to see which features correlate with retention
+3. Check `sessions-dist` — if most sessions are 0s bounces, the landing page is the problem. If sessions are long but signups are low, the activation path is the problem
+4. Use `pages --type entry` — compare bounce rates across landing pages to find which first impression works
 
 **What to optimize:**
 - Time to first value — how fast does the user get a result?
@@ -412,12 +731,12 @@ Conversion doesn't happen at checkout. It happens when the user realizes the pro
 Don't try to be everywhere. Pick one acquisition channel and go deep.
 
 **How Agent Analytics supports this:**
-- `analytics_breakdown` (property: `referrer`) → see where traffic comes from
-- `analytics_breakdown` (property: `utm_source`) → track campaign sources
-- `analytics_insights` → week-over-week: is the channel growing?
-- Create landing page variants per channel and compare with `analytics_pages`
+- `breakdown --property referrer --event page_view` → see where traffic actually comes from
+- `breakdown --property utm_source` → track campaign sources
+- `insights --period 7d` → week-over-week: is the channel growing?
+- Create landing page variants per channel (e.g., `/reddit/`, `/hn/`) and compare with `pages --type entry`
 
-**Workflow:**
+**Agent workflow for channel optimization:**
 1. Check referrer breakdown weekly
 2. Identify the top-performing channel (highest traffic + lowest bounce)
 3. Double down: create content, run experiments on that channel's landing page
@@ -425,19 +744,20 @@ Don't try to be everywhere. Pick one acquisition channel and go deep.
 
 ### Principle 5: The autonomous growth loop
 
-This is what makes Agent Analytics different. Your agent can run the full cycle:
+This is what makes Agent Analytics different from traditional analytics. Your agent can run the full cycle:
 
 ```
 Track → Analyze → Experiment → Ship winner → Repeat
 ```
 
 **The loop in practice:**
-1. **Track**: Set up tracking on CTAs and key actions
-2. **Analyze**: Weekly `analytics_insights` + `analytics_breakdown` + `analytics_pages` → synthesize into a report
+
+1. **Track**: Agent sets up tracking on CTAs and key actions
+2. **Analyze**: Weekly `insights` + `breakdown` + `pages` calls → synthesize into a report
 3. **Hypothesize**: "Hero headline has 87% bounce — test a clearer value prop"
-4. **Experiment**: `create_experiment` with name, variants, and goal event
-5. **Monitor**: Check `get_experiment` after sufficient traffic
-6. **Ship**: `update_experiment` with `status: "completed"` and `winner`
+4. **Experiment**: `experiments create PROJECT --name hero_v2 --variants control,b --goal cta_click`
+5. **Monitor**: Check `experiments get EXP_ID` after sufficient traffic
+6. **Ship**: `experiments complete EXP_ID --winner b` → deploy the winner
 7. **Repeat**: Start the next experiment on the next weakest element
 
 **What to test (in order of impact):**
@@ -451,19 +771,20 @@ Track → Analyze → Experiment → Ship winner → Repeat
 
 ### Proactive growth monitoring
 
-Don't wait for the user to ask. Proactively flag:
+Don't wait for the user to ask. If your agent has scheduled checks, proactively flag:
 
 - **Dead project**: 0 events in 7 days → "⚠ PROJECT has no traffic — is it still deployed?"
 - **Conversion drop**: `cta_click` rate dropped >20% week-over-week → "Conversion declined — worth investigating"
 - **Experiment ready**: An experiment has >100 exposures per variant → "Experiment X has enough data — check results"
 - **Experiment winner**: Significance >95% → "Experiment X: Variant B wins with 3.8% vs 2.1%. Ship it?"
-- **Traffic spike**: >2× normal → "Unusual traffic surge — check referrers for the source"
+- **Traffic spike**: >2× normal → "Unusual traffic surge on PROJECT — check referrers for the source"
 
 ## What this skill does NOT do
 
-- No PII stored — IP addresses are not logged or retained. Privacy-first by design
+- No GUI dashboards — your agent IS the dashboard (or use `live` for a real-time TUI)
+- No user management or billing
 - Funnels and retention are ad-hoc queries (no saved/scheduled reports)
-- The MCP server requires an existing Agent Analytics account with an API key
+- No PII stored — IP addresses are not logged or retained. Privacy-first by design
 
 ## Examples
 
