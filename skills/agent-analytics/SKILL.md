@@ -1,7 +1,7 @@
 ---
 name: agent-analytics
 description: "Web analytics platform that AI agents can query via CLI. Track page views, custom events, run A/B experiments, analyze funnels, retention cohorts, and traffic heatmaps. Use when the user needs web analytics, visitor tracking, event tracking, conversion optimization, growth insights, A/B testing, or wants to add analytics to their website or app. Also available as an MCP server at mcp.agentanalytics.sh."
-version: 3.3.0
+version: 4.0.0
 author: dannyshmueli
 license: MIT
 repository: https://github.com/Agent-Analytics/agent-analytics-mcp
@@ -334,6 +334,44 @@ npx @agent-analytics/cli breakdown mysite --property perf_ttfb --event page_view
 ```
 
 Only fires once per page load — SPA navigations via pushState don't create new Navigation Timing entries.
+
+## Step 2g: Content impression tracking
+
+Track which elements users actually see using `IntersectionObserver`:
+
+```html
+<div data-aa-impression="hero_cta">Get Started Free</div>
+
+<!-- With extra properties -->
+<section data-aa-impression="pricing_card"
+         data-aa-impression-plan="pro"
+         data-aa-impression-position="above-fold">
+  Pro Plan - $29/mo
+</section>
+```
+
+**How it works:**
+- When 50% of the element is visible in the viewport, a `$impression` event fires with `{ name: "hero_cta" }`
+- Each element fires once per page view (no duplicates from scrolling up and down)
+- Extra properties via `data-aa-impression-*` attributes (same pattern as `data-aa-event-*`)
+- On SPA navigation, elements are re-scanned — same element can fire again on a new page
+- Browsers without `IntersectionObserver` (<3%) silently skip — zero errors
+- No script-tag opt-in needed — zero overhead if no elements have the attribute
+
+**Querying impression data:**
+
+```bash
+# Recent impressions
+npx @agent-analytics/cli events my-site --event '$impression' --days 7
+
+# Which elements are seen most
+npx @agent-analytics/cli breakdown my-site --property name --event '$impression'
+
+# Impressions by placement
+npx @agent-analytics/cli query my-site \
+  --filter '[{"field":"event","op":"eq","value":"$impression"}]' \
+  --group-by properties.name --metrics event_count,unique_users
+```
 
 ## Step 3: Test immediately
 
