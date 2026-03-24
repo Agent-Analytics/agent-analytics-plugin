@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Analytics"
+  short_description: "Track growth, funnels, retention, and experiments"
+  default_prompt: "Use $agent-analytics to analyze project analytics, summarize trends, and recommend high-impact growth actions."

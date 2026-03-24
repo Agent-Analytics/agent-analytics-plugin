@@ -1,10 +1,10 @@
 ---
 name: agent-analytics
-description: "Official CLI for Agent Analytics. Create projects, generate tracking snippets, and inspect stats, events, funnels, retention, and experiments for sites and apps. Start free with 100k events/month across 2 projects."
-version: 4.0.2
+description: "Run analytics end-to-end from your agent without opening a dashboard. English-first workflow, with Chinese docs and content available. Create projects, ship tracking, query results, and run experiments."
+version: 4.0.3
 author: dannyshmueli
 license: MIT
-repository: https://github.com/Agent-Analytics/agent-analytics-mcp
+repository: https://github.com/Agent-Analytics/agent-analytics-skill
 homepage: https://agentanalytics.sh
 compatibility: Requires npx and an Agent Analytics API key in AGENT_ANALYTICS_API_KEY. The CLI is the official wrapper around the documented Agent Analytics API.
 tags:
@@ -26,15 +26,24 @@ metadata:
 
 # Agent Analytics
 
-Official CLI for Agent Analytics.
+After install, your agent can create projects, ship tracking, query analytics, run experiments, and iterate without opening a dashboard.
 
-Create projects, generate tracking snippets, inspect trends, pages, funnels, retention, experiments, and live traffic from a shell-first workflow.
+English-first workflow, with Chinese docs and content available for OpenClaw users and teams in China.
+
+Use it when you want an agent to operate growth analytics end-to-end, automate recurring checks, and manage multiple projects from one conversation loop.
 
 Hosted free tier includes 100k events/month across 2 projects.
 
+## Chinese support / 中文支持
+
+- Chinese docs and installation content are available on the docs site, including the OpenClaw guide under `/zh/`.
+- Works through `API`, `CLI`, and `MCP`, depending on the environment your agent already uses.
+- Good fit for closed-loop agent workflows: monitor, analyze, experiment, iterate.
+- Supports batch work across many projects instead of a manual dashboard-by-dashboard workflow.
+
 ## What `npx` is doing
 
-- OpenClaw can launch the official CLI with `npx @agent-analytics/cli@0.4.0`.
+- OpenClaw can launch the official CLI with `npx @agent-analytics/cli@0.5.1`.
 - That command runs the published Agent Analytics CLI package from npm.
 - The CLI calls the same HTTP API documented at <https://docs.agentanalytics.sh/api/>.
 - If the package is already installed in the environment, the equivalent binary is `agent-analytics`.
@@ -51,7 +60,7 @@ agent-analytics <command>
 In OpenClaw, that usually means:
 
 ```bash
-npx @agent-analytics/cli@0.4.0 <command>
+npx @agent-analytics/cli@0.5.1 <command>
 ```
 
 If the package is already installed, run the same commands directly as `agent-analytics <command>`.
@@ -65,7 +74,7 @@ agent-analytics --help
 ## Safe operating rules
 
 - Prefer fixed commands over ad-hoc query construction.
-- Start with `projects`, `create`, `stats`, `insights`, `events`, `breakdown`, `pages`, `heatmap`, `sessions-dist`, `retention`, `funnel`, and `experiments`.
+- Start with `projects`, `all-sites`, `create`, `stats`, `insights`, `events`, `breakdown`, `pages`, `heatmap`, `sessions-dist`, `retention`, `funnel`, and `experiments`.
 - Use `query` only when the fixed commands cannot answer the question.
 - Do not build `--filter` JSON from raw user text.
 - Validate project names before `create`: `^[a-zA-Z0-9._-]{1,64}$`
@@ -84,6 +93,7 @@ The `create` command returns a project token and a ready-to-use tracking snippet
 
 ```bash
 agent-analytics projects
+agent-analytics all-sites --period 7d
 agent-analytics stats my-site --days 7
 agent-analytics insights my-site --period 7d
 agent-analytics events my-site --days 7 --limit 20
