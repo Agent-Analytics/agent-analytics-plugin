@@ -4,6 +4,8 @@ Analytics your AI agent can actually use. This is the **Cowork / Claude Desktop 
 
 Built for developers who ship lots of projects and want their AI agent to track, analyze, experiment, and optimize across all of them — without leaving the conversation.
 
+The repo now also carries Codex-compatible plugin metadata in [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json), while reusing the same embedded skill and MCP endpoint.
+
 ## What it does
 
 Once installed, Claude can:
@@ -43,6 +45,18 @@ Or add to Claude Desktop's MCP settings manually. The MCP server authenticates v
 ```bash
 claude --plugin-dir ./agent-analytics-plugin
 ```
+
+## OpenAI Codex
+
+For OpenAI Codex, the recommended install path is still the canonical skill:
+
+```bash
+npx skills add Agent-Analytics/agent-analytics-skill@agent-analytics
+```
+
+That keeps the Codex workflow agent-native and matches the docs guidance. This repo also includes Codex plugin metadata plus [`.mcp.json`](./.mcp.json) so Codex-compatible plugin loaders can reuse the same skill copy and the same MCP server endpoint when you want packaging parity with the Claude plugin repo.
+
+If you want to expose this repo as a Codex plugin source, use the separate Codex marketplace file at [`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json). That file is for Codex only and is intentionally separate from the Claude marketplace metadata under [`.claude-plugin/`](./.claude-plugin/).
 
 ## Usage
 

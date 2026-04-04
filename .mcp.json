@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "agent-analytics": {
+      "url": "https://mcp.agentanalytics.sh/mcp"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "agent-analytics",
+  "version": "1.0.0",
+  "description": "Analytics your AI agent can actually use. Track growth, funnels, retention, and experiments from the conversation loop.",
+  "author": {
+    "name": "Agent Analytics",
+    "email": "contact@agentanalytics.sh",
+    "url": "https://agentanalytics.sh"
+  },
+  "homepage": "https://agentanalytics.sh",
+  "repository": "https://github.com/Agent-Analytics/agent-analytics-plugin",
+  "keywords": [
+    "analytics",
+    "tracking",
+    "web",
+    "events",
+    "experiments",
+    "growth",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Agent Analytics",
+    "shortDescription": "Track growth, funnels, retention, and experiments.",
+    "longDescription": "Query analytics, inspect project health, analyze funnels and retention, run experiments, and get growth guidance without leaving the conversation.",
+    "developerName": "Agent Analytics",
+    "category": "Analytics",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://agentanalytics.sh",
+    "privacyPolicyURL": "https://agentanalytics.sh/privacy",
+    "termsOfServiceURL": "https://agentanalytics.sh/terms",
+    "defaultPrompt": [
+      "How is my-site doing this week?",
+      "What are my top pages and referrers?",
+      "Set up an A/B experiment for my signup CTA."
+    ],
+    "brandColor": "#2563EB"
+  }
+}
