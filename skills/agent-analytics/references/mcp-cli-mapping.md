@@ -12,6 +12,7 @@ Use MCP first when available. Use CLI fallback when MCP is unavailable.
 | Overview chart/KPIs | `analytics_overview` | `npx @agent-analytics/cli stats <project> --days 7` |
 | Top pages/referrers/sources | `analytics_breakdown` | `npx @agent-analytics/cli breakdown <project> --property path` |
 | Entry and exit pages | `analytics_pages` | `npx @agent-analytics/cli pages <project> --type both` |
+| Session paths from entry to goal/drop-off | `analytics_paths` | `npx @agent-analytics/cli paths <project> --goal signup --since 30d --max-steps 5` |
 | Session quality | `analytics_sessions` | `npx @agent-analytics/cli sessions-dist <project>` |
 | Live activity | `live_now` | `npx @agent-analytics/cli live <project>` |
 | Funnel drop-off | `analytics_funnel` | `npx @agent-analytics/cli funnel <project> --steps page_view,signup,purchase` |

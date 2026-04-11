@@ -11,6 +11,7 @@ The repo now also carries Codex-compatible plugin metadata in [`.codex-plugin/pl
 Once installed, Claude can:
 
 - **Query your analytics** — traffic, top pages, referrers, bounce rates, session engagement
+- **Read session paths** — connect entry pages, exit pages, goals, and drop-offs before choosing a funnel or experiment
 - **Run A/B experiments** — create, monitor, and complete experiments
 - **Analyze funnels** — find where users drop off in multi-step flows
 - **Track retention** — cohort analysis to see if users come back
@@ -64,6 +65,7 @@ Once installed, just ask Claude about your analytics in natural language:
 
 - "How's my-site doing this week?"
 - "What are my top pages?"
+- "Which entry pages lead to signup, and where do non-converting sessions exit?"
 - "Where's my traffic coming from?"
 - "Are users coming back?"
 - "Set up an A/B test on the hero headline"
