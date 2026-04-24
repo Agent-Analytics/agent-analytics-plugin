@@ -231,7 +231,7 @@ If a task needs something outside these common flows, use `npx --yes @agent-anal
 
 ## Project context
 
-Use `context get` and `context set` when the product has custom goals, activation events, or event meanings that should travel with analytics results. Keep the context short because project analytics endpoints include it as `project_context` for later agent reads.
+Use `context get` and `context set` when the product has custom goals, activation events, or event meanings that should travel with analytics results. Keep the context short because project analytics endpoints include it as `project_context` for later agent reads. `context set` accepts an encoded JSON body up to 8KB.
 
 At the start of any project-specific analysis, run `context get <project>` after resolving the project. Use the returned `project_context` to interpret metrics, choose goal events, and explain results in the product's language.
 
