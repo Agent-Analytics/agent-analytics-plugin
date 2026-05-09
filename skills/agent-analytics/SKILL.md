@@ -4,7 +4,7 @@ description: "Run analytics end-to-end from your agent without opening a dashboa
 version: 4.0.27
 author: dannyshmueli
 license: MIT
-repository: https://github.com/Agent-Analytics/agent-analytics-skill
+repository: https://github.com/agent-analytics/skills
 homepage: https://agentanalytics.sh
 compatibility: Requires npx. Browser approval is the primary login path, and detached approval plus finish-code handoff is the default for issue-based runtimes. In Paperclip company-task workflows, always use detached login for the skill path. Normal setup does not require an API key.
 tags:

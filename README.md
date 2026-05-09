@@ -52,7 +52,7 @@ claude --plugin-dir ./agent-analytics-plugin
 For OpenAI Codex, the recommended install path is still the canonical skill:
 
 ```bash
-npx skills add Agent-Analytics/agent-analytics-skill
+npx skills add agent-analytics/skills
 ```
 
 That keeps the Codex workflow agent-native and matches the docs guidance. This repo also includes Codex plugin metadata plus [`.mcp.json`](./.mcp.json) so Codex-compatible plugin loaders can reuse the same skill copy and the same MCP server endpoint when you want packaging parity with the Claude plugin repo.
@@ -76,7 +76,7 @@ The plugin teaches Claude which tool to use for each question, how to interpret 
 ## Related
 
 - [Agent Analytics](https://agentanalytics.sh) — the platform
-- [Agent Skill](https://github.com/Agent-Analytics/agent-analytics-skill) — the canonical public skill repo
+- [Agent Skill](https://github.com/agent-analytics/skills) — the canonical public skill repo
 - [CLI package](https://github.com/Agent-Analytics/agent-analytics-cli) — for terminal-first workflows
 - [MCP server](https://github.com/Agent-Analytics/agent-analytics-mcp) — the MCP server this plugin queries
 - [Docs](https://docs.agentanalytics.sh) — API reference
