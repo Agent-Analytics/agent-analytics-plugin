@@ -76,7 +76,7 @@ The plugin teaches Claude which tool to use for each question, how to interpret 
 ## Related
 
 - [Agent Analytics](https://agentanalytics.sh) — the platform
-- [Agent Skill](https://github.com/agent-analytics/skills) — the canonical public skill repo
+- [Agent Skill](https://github.com/Agent-Analytics/skills) — the canonical public skill repo
 - [CLI package](https://github.com/Agent-Analytics/agent-analytics-cli) — for terminal-first workflows
 - [MCP server](https://github.com/Agent-Analytics/agent-analytics-mcp) — the MCP server this plugin queries
 - [Docs](https://docs.agentanalytics.sh) — API reference
