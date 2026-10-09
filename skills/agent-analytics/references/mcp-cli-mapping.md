@@ -6,36 +6,36 @@ Use MCP first when available. Use CLI fallback when MCP is unavailable.
 
 | Task | MCP Tool | CLI Command |
 | --- | --- | --- |
-| List projects | `list_projects` | `npx --yes @agent-analytics/cli@0.5.35 projects` |
-| Create project | `create_project` | `npx --yes @agent-analytics/cli@0.5.35 create <name> --domain <url>` |
-| Baseline trend | `analytics_insights` | `npx --yes @agent-analytics/cli@0.5.35 insights <project> --period 7d` |
-| Overview chart/KPIs | `analytics_overview` | `npx --yes @agent-analytics/cli@0.5.35 stats <project> --days 7` |
-| Top pages/referrers/sources | `analytics_breakdown` | `npx --yes @agent-analytics/cli@0.5.35 breakdown <project> --property path` |
-| Entry and exit pages | `analytics_pages` | `npx --yes @agent-analytics/cli@0.5.35 pages <project> --type both` |
-| Session paths from entry to goal/drop-off | `analytics_paths` | `npx --yes @agent-analytics/cli@0.5.35 paths <project> --goal signup --since 30d --max-steps 5` |
-| Session quality | `analytics_sessions` | `npx --yes @agent-analytics/cli@0.5.35 sessions-dist <project>` |
-| Live activity | `live_now` | `npx --yes @agent-analytics/cli@0.5.35 live <project>` |
-| Funnel drop-off | `analytics_funnel` | `npx --yes @agent-analytics/cli@0.5.35 funnel <project> --steps page_view,signup,purchase` |
-| Cohort retention | `analytics_retention` | `npx --yes @agent-analytics/cli@0.5.35 retention <project> --period week --cohorts 8` |
-| Discover event/property keys | `properties`, `properties_received` | `npx --yes @agent-analytics/cli@0.5.35 properties <project>` and `npx --yes @agent-analytics/cli@0.5.35 properties-received <project>` |
-| Custom segmented query | `query` | `npx --yes @agent-analytics/cli@0.5.35 query <project> ...` |
+| List projects | `list_projects` | `npx --yes @agent-analytics/cli@0.5.36 projects` |
+| Create project | `create_project` | `npx --yes @agent-analytics/cli@0.5.36 create <name> --domain <url>` |
+| Baseline trend | `analytics_insights` | `npx --yes @agent-analytics/cli@0.5.36 insights <project> --period 7d` |
+| Overview chart/KPIs | `analytics_overview` | `npx --yes @agent-analytics/cli@0.5.36 stats <project> --days 7` |
+| Top pages/referrers/sources | `analytics_breakdown` | `npx --yes @agent-analytics/cli@0.5.36 breakdown <project> --property path` |
+| Entry and exit pages | `analytics_pages` | `npx --yes @agent-analytics/cli@0.5.36 pages <project> --type both` |
+| Session paths from entry to goal/drop-off | `analytics_paths` | `npx --yes @agent-analytics/cli@0.5.36 paths <project> --goal signup --since 30d --max-steps 5` |
+| Session quality | `analytics_sessions` | `npx --yes @agent-analytics/cli@0.5.36 sessions-dist <project>` |
+| Live activity | `live_now` | `npx --yes @agent-analytics/cli@0.5.36 live <project>` |
+| Funnel drop-off | `analytics_funnel` | `npx --yes @agent-analytics/cli@0.5.36 funnel <project> --steps page_view,signup,purchase` |
+| Cohort retention | `analytics_retention` | `npx --yes @agent-analytics/cli@0.5.36 retention <project> --period week --cohorts 8` |
+| Discover event/property keys | `properties`, `properties_received` | `npx --yes @agent-analytics/cli@0.5.36 properties <project>` and `npx --yes @agent-analytics/cli@0.5.36 properties-received <project>` |
+| Custom segmented query | `query` | `npx --yes @agent-analytics/cli@0.5.36 query <project> ...` |
 
 ## Experiment Lifecycle
 
 | Task | MCP Tool | CLI Command |
 | --- | --- | --- |
-| List experiments | `list_experiments` | `npx --yes @agent-analytics/cli@0.5.35 experiments list <project>` |
-| Create experiment | `create_experiment` | `npx --yes @agent-analytics/cli@0.5.35 experiments create <project> --name <name> --variants control,new --goal <event>` |
-| Check results | `get_experiment` | `npx --yes @agent-analytics/cli@0.5.35 experiments get <id>` |
-| Pause/resume/complete | `update_experiment` | `npx --yes @agent-analytics/cli@0.5.35 experiments pause|resume|complete <id>` |
-| Delete | `delete_experiment` | `npx --yes @agent-analytics/cli@0.5.35 experiments delete <id>` |
+| List experiments | `list_experiments` | `npx --yes @agent-analytics/cli@0.5.36 experiments list <project>` |
+| Create experiment | `create_experiment` | `npx --yes @agent-analytics/cli@0.5.36 experiments create <project> --name <name> --variants control,new --goal <event>` |
+| Check results | `get_experiment` | `npx --yes @agent-analytics/cli@0.5.36 experiments get <id>` |
+| Pause/resume/complete | `update_experiment` | `npx --yes @agent-analytics/cli@0.5.36 experiments pause|resume|complete <id>` |
+| Delete | `delete_experiment` | `npx --yes @agent-analytics/cli@0.5.36 experiments delete <id>` |
 
 ## Query Recipes
 
 Signups from Germany in the last 7 days:
 
 ```bash
-npx --yes @agent-analytics/cli@0.5.35 query my-site \
+npx --yes @agent-analytics/cli@0.5.36 query my-site \
   --filter '[{"field":"event","op":"eq","value":"signup"},{"field":"country","op":"eq","value":"DE"}]' \
   --metrics event_count,unique_users --days 7
 ```
@@ -43,13 +43,13 @@ npx --yes @agent-analytics/cli@0.5.35 query my-site \
 Daily unique users for 30 days:
 
 ```bash
-npx --yes @agent-analytics/cli@0.5.35 query my-site \
+npx --yes @agent-analytics/cli@0.5.36 query my-site \
   --metrics unique_users --group-by date --days 30
 ```
 
 Top countries by traffic:
 
 ```bash
-npx --yes @agent-analytics/cli@0.5.35 query my-site \
+npx --yes @agent-analytics/cli@0.5.36 query my-site \
   --group-by country --metrics event_count,unique_users --limit 10
 ```
